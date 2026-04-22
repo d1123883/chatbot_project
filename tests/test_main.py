@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
-from chatbot_project.backend.main import app, get_session
+from backend.main import app, get_session
 import uuid
 
 # Setup an in-memory database for testing

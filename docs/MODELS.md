@@ -1,30 +1,31 @@
-# Model Configuration & Optimization (Models)
+# Model Configuration (Gemini 2.5 Flash)
 
 ## 1. 核心模型選型
-針對此專案的需求（需處理複雜工具指令與檔案上傳），選用以下模型：
+根據使用者指定，本系統完全採用以下模型：
 
-*   **Claude 3.5 Sonnet**: 作為預設主模型。
-    *   **理由**: 領先的工具調用 (Function Calling) 準確度，極佳的寫作語氣，以及支援 Vision (處理上傳圖片)。
-*   **GPT-4o-mini**: 作為備用/輕量化任務模型（例如對話標題自動生成）。
+*   **Gemini 2.5 Flash** (`gemini-2.5-flash`):
+    *   **定位**: 高性能、低延遲的次世代大模型。
+    *   **優勢**: 具備強大的長上下文處理能力、極速的推理響應，以及優異的工具調用 (Function Calling) 準確度。
 
 ## 2. 推理參數配置 (Inference Settings)
 
 | 場景 | 模型 | Temperature | Max Tokens |
 | :--- | :--- | :--- | :--- |
-| **一般對話** | Claude 3.5 | 0.7 | 4096 |
-| **工具執行** | Claude 3.5 | 0.0 | 2048 |
-| **摘要與記憶萃取** | GPT-4o-mini | 0.3 | 1024 |
+| **預設對話** | Gemini 2.5 Flash | 0.8 | 8192 |
+| **工具執行** | Gemini 2.5 Flash | 0.0 | 4096 |
+| **知識萃取** | Gemini 2.5 Flash | 0.2 | 2048 |
 
 ## 3. 系統提示詞框架 (System Prompt)
 
 ```text
-You are a highly capable AI Assistant. 
-- You have access to a session-based memory of user preferences.
-- You can execute tools if needed.
-- When answering, be concise and use Markdown.
-- If a user uploads an image, analyze it before responding.
+You are an Advanced AI Assistant powered by Gemini 2.5 Flash.
+- You have high reasoning capabilities and follow user instructions strictly.
+- You use tools when available to provide factual information.
+- You maintain a professional and helpful tone.
 ```
 
-## 4. Token 優化策略
-*   **對話滾動**: 僅保留最近 15 筆 Message 進入 Context。
-*   **摘要壓縮**: 之前的歷史對話緩存為一段 Summary，以節省 Token 消耗。
+## 4. 安全設定 (Safety Settings)
+*   **Hate Speech**: BLOCK_MEDIUM_AND_ABOVE
+*   **Harassment**: BLOCK_MEDIUM_AND_ABOVE
+*   **Sexually Explicit**: BLOCK_MEDIUM_AND_ABOVE
+*   **Dangerous Content**: BLOCK_MEDIUM_AND_ABOVE

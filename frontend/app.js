@@ -8,6 +8,9 @@ const userInput = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const newChatBtn = document.getElementById('new-chat-btn');
 const abortBtn = document.getElementById('abort-btn');
+const attachBtn = document.getElementById('attach-btn');
+const fileInput = document.getElementById('file-input');
+const uploadPreview = document.getElementById('upload-preview');
 
 // Initial Load
 window.addEventListener('DOMContentLoaded', loadSessions);
@@ -53,11 +56,25 @@ function appendMessage(role, content) {
     return div;
 }
 
+// File Upload Logic
+attachBtn.onclick = () => fileInput.click();
+fileInput.onchange = () => {
+    const file = fileInput.files[0];
+    if (file) {
+        uploadPreview.innerText = `📎 ${file.name}`;
+        uploadPreview.style.display = 'block';
+    }
+};
+
 sendBtn.onclick = async () => {
     const text = userInput.value.trim();
     if (!text || !currentSessionId) return;
 
+    const file = fileInput.files[0];
     userInput.value = '';
+    fileInput.value = '';
+    uploadPreview.style.display = 'none';
+    
     appendMessage('user', text);
 
     const aiMsgDiv = appendMessage('assistant', '...');
@@ -67,8 +84,16 @@ sendBtn.onclick = async () => {
     abortBtn.disabled = false;
 
     try {
-        const response = await fetch(`${API_BASE}/chat/stream?session_id=${currentSessionId}&prompt=${encodeURIComponent(text)}`, {
+        const formData = new FormData();
+        formData.append('session_id', currentSessionId);
+        formData.append('prompt', text);
+        if (file) {
+            formData.append('file', file);
+        }
+
+        const response = await fetch(`${API_BASE}/chat/stream`, {
             method: 'POST',
+            body: formData,
             signal: abortController.signal
         });
 
@@ -89,6 +114,8 @@ sendBtn.onclick = async () => {
                         aiContent = "";
                     } else if (data === "[DONE]") {
                         // Finished
+                    } else if (data.startsWith("[TOOL_USE:")) {
+                        aiMsgDiv.innerText += `\n(${data})\n`;
                     } else {
                         aiContent += data;
                         aiMsgDiv.innerText = aiContent;
@@ -101,6 +128,7 @@ sendBtn.onclick = async () => {
             aiMsgDiv.innerText += " (Stopped)";
         } else {
             console.error(err);
+            aiMsgDiv.innerText = "Error communication with API.";
         }
     } finally {
         abortBtn.disabled = true;

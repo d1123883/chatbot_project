@@ -1,11 +1,20 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+import uuid
+import os
+from pathlib import Path
+from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables using ABSOLUTE path relative to this file
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+from fastapi import FastAPI, Depends, HTTPException, Query, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 from .database import engine, create_db_and_tables, get_session
 from .models import Session as ChatSession, Message, UserMemory
 from .orchestrator import AIAgent
-import uuid
 
 app = FastAPI(title="Advanced AI Chatbot")
 
@@ -40,13 +49,20 @@ def get_messages(session_id: uuid.UUID, db: Session = Depends(get_session)):
 
 @app.post("/chat/stream")
 async def chat_stream(
-    session_id: uuid.UUID, 
-    prompt: str, 
+    session_id: uuid.UUID = Form(...), 
+    prompt: str = Form(...), 
+    file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_session)
 ):
     agent = AIAgent(db)
+    file_data = None
+    if file:
+        file_data = {
+            "mime_type": file.content_type,
+            "data": await file.read()
+        }
     return StreamingResponse(
-        agent.generate_response(str(session_id), prompt), 
+        agent.generate_response(session_id, prompt, file_data), 
         media_type="text/event-stream"
     )
 
