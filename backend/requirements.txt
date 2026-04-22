@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlmodel
+httpx
+pytest
+python-multipart
+python-dotenv
